@@ -1,0 +1,9 @@
+{
+  "name": "vue-graphql-node-server",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "apollo-server": "^2.9.16",
+    "graphql": "^14.5.8"
+  }
+}
