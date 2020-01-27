@@ -32,8 +32,11 @@
           <ul class="list-group">
             <li class="list-group-item" v-for="domain in domains" v-bind:key="domain.name">
               <div class="row">
-                <div class="col-md">{{ domain.name }}</div>
-                <div class="col-md text-right">
+                <div class="col-md-6">{{ domain.name }}</div>
+                <div class="col-md-3">
+                  <span class="badge badge-info">{{ domain.available ? "Disponivel" : "Indisponivel" }}</span>
+                </div>
+                <div class="col-md-3 text-right" v-if="domain.available">
                   <a class="btn btn-info" v-bind:href="domain.checkout" target="_blank">
                     <span class="fa fa-shopping-cart"></span>
                   </a>
@@ -63,7 +66,8 @@ export default {
 	},
 	data: () => {
 		return {
-			items: []
+			items: [],
+			domains: []
 		};
 	},
 	methods: {
@@ -109,7 +113,10 @@ export default {
 						description
 					}
 				}
-			).then(({ newItem }) => this.items.push(newItem));
+			).then(({ newItem }) => {
+				this.items.push(newItem);
+				this.generateDomains();
+			});
 		},
 		deleteItem(id) {
 			this.callBackend(
@@ -124,8 +131,22 @@ export default {
 			).then(({ deleted }) => {
 				if (deleted) {
 					this.items = this.items.filter(item => item.id !== id);
+					this.generateDomains();
 				}
 			});
+		},
+		generateDomains() {
+			this.callBackend(
+				`
+					mutation {
+						domains: generateDomains {
+							name
+							checkout
+							available
+						}
+					}
+				`
+			).then(({ domains }) => (this.domains = domains));
 		},
 		callBackend(query, variables) {
 			return axios.post("http://localhost:4000", {
@@ -140,24 +161,11 @@ export default {
 		},
 		suffixes() {
 			return this.items.filter(item => item.type === "suffix");
-		},
-		domains() {
-			const domains = [];
-
-			this.prefixes.forEach(({ description: prefixDescription }) => {
-				this.suffixes.forEach(({ description: suffixDescription }) => {
-					const name = prefixDescription + suffixDescription;
-					const url = name.toLowerCase();
-					const checkout = `https://checkout.hostgator.com.br/?a=add&sld=${url}&tld=.com.br`;
-					domains.push({ name, checkout });
-				});
-			});
-
-			return domains;
 		}
 	},
 	created() {
 		this.getItems();
+		this.generateDomains();
 	}
 };
 </script>
