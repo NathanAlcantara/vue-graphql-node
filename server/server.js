@@ -10,6 +10,7 @@ const typeDefs = `
 
     type Domain {
         name: String
+        extension: String
         checkout: String
         available: Boolean
     }
@@ -27,6 +28,7 @@ const typeDefs = `
         saveItem(item: ItemInput): Item
         deleteItem(id: Int): Boolean
         generateDomains: [Domain]
+        generateDomain(name: String): [Domain]
     }
 `;
 
@@ -86,13 +88,29 @@ const resolvers = {
                 for (const { description: suffixDescription } of suffixes) {
                     const name = prefixDescription + suffixDescription;
                     const url = name.toLowerCase();
-                    const tld = ".com.br"
-                    const checkout = `https://checkout.hostgator.com.br/?a=add&sld=${url}&tld=${tld}`;
+                    const extension = ".com.br"
+                    const checkout = `https://checkout.hostgator.com.br/?a=add&sld=${url}&tld=${extension}`;
 
                     const available = await isDomainAvailable(`${url}${tld}`);
 
                     domains.push({ name, checkout, available });
                 }
+            }
+
+            return domains;
+        },
+        async generateDomain(_, args) {
+            const { name } = args;
+            const domains = [];
+            const extensions = [".com.br", ".com", ".net", ".org"];
+
+            for (const extension of extensions) {
+                const url = name.toLowerCase();
+                const checkout = `https://checkout.hostgator.com.br/?a=add&sld=${url}&tld=${extension}`;
+
+                const available = await isDomainAvailable(`${url}${extension}`);
+
+                domains.push({ name, extension, checkout, available });
             }
 
             return domains;

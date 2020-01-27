@@ -6,8 +6,8 @@
           <AppItemList
             title="Prefixos"
             v-bind:items="prefixes"
-            v-on:addItem="addPrefix"
-            v-on:deleteItem="deleteItem"
+            @:addItem="addPrefix"
+            @:deleteItem="deleteItem"
           ></AppItemList>
         </div>
 
@@ -15,8 +15,8 @@
           <AppItemList
             title="Sufixos"
             v-bind:items="suffixes"
-            v-on:addItem="addSuffix"
-            v-on:deleteItem="deleteItem"
+            @:addItem="addSuffix"
+            @:deleteItem="deleteItem"
           ></AppItemList>
         </div>
       </div>
@@ -34,12 +34,18 @@
               <div class="row">
                 <div class="col-md-6">{{ domain.name }}</div>
                 <div class="col-md-3">
-                  <span class="badge badge-info">{{ domain.available ? "Disponivel" : "Indisponivel" }}</span>
+                  <span
+                    class="badge badge-info"
+                  >{{ domain.available ? "Disponivel" : "Indisponivel" }}</span>
                 </div>
                 <div class="col-md-3 text-right" v-if="domain.available">
                   <a class="btn btn-info" v-bind:href="domain.checkout" target="_blank">
                     <span class="fa fa-shopping-cart"></span>
                   </a>
+                  &nbsp;
+                  <button class="btn btn-info" @click="openDomain(domain)">
+                    <span class="fa fa-search"></span>
+                  </button>
                 </div>
               </div>
             </li>
@@ -54,7 +60,7 @@
 import AppItemList from "./AppItemList";
 import axios from "axios/dist/axios";
 
-axios.interceptors.response.use(function(response) {
+axios.interceptors.response.use(response => {
 	const { data } = response.data;
 	return data;
 });
@@ -147,6 +153,11 @@ export default {
 					}
 				`
 			).then(({ domains }) => (this.domains = domains));
+		},
+		openDomain(domain) {
+			this.$router.push({
+				path: `/domains/${domain.name}`
+			});
 		},
 		callBackend(query, variables) {
 			return axios.post("http://localhost:4000", {
