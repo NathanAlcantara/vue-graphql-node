@@ -7,7 +7,7 @@
             title="Prefixos"
             v-bind:items="prefixes"
             v-on:addItem="addPrefix"
-            v-on:deleteItem="deletePrefix"
+            v-on:deleteItem="deleteItem"
           ></AppItemList>
         </div>
 
@@ -16,7 +16,7 @@
             title="Sufixos"
             v-bind:items="suffixes"
             v-on:addItem="addSuffix"
-            v-on:deleteItem="deleteSuffix"
+            v-on:deleteItem="deleteItem"
           ></AppItemList>
         </div>
       </div>
@@ -63,77 +63,42 @@ export default {
 	},
 	data: () => {
 		return {
-			prefixes: [],
-			suffixes: []
+			items: []
 		};
 	},
 	methods: {
 		addPrefix(prefixDescription) {
 			if (prefixDescription) {
-				this.addItem("prefix", prefixDescription).then(({ newItem }) =>
-					this.prefixes.push(newItem)
-				);
+				this.addItem("prefix", prefixDescription);
 			}
 		},
 		addSuffix(suffixDescription) {
 			if (suffixDescription) {
-				this.addItem("suffix", suffixDescription).then(({ newItem }) =>
-					this.suffixes.push(newItem)
-				);
+				this.addItem("suffix", suffixDescription);
 			}
 		},
-		deletePrefix(prefixId) {
-			this.deleteItem(prefixId).then(({ deleted }) => {
-				if (deleted) {
-					this.prefixes = this.prefixes.filter(
-						prefix => prefix.id !== prefixId
-					);
-				}
-			});
-		},
-		deleteSuffix(suffixId) {
-			this.deleteItem(suffixId).then(({ deleted }) => {
-				if (deleted) {
-					this.suffixes = this.suffixes.filter(
-						suffix => suffix.id !== suffixId
-					);
-				}
-			});
-		},
-		getPrefixes() {
+		getItems() {
 			this.callBackend(
 				`
 					{
-						prefixes: items(type: "prefix") {
+						items {
 							id
+							type
 							description
 						}
 					}
 				`
-			).then(({ prefixes }) => {
-				this.prefixes = prefixes.map(prefix => prefix);
-			});
-		},
-		getSuffixes() {
-			this.callBackend(
-				`
-					{
-						suffixes: items(type: "suffix") {
-							id
-							description
-						}
-					}
-				`
-			).then(({ suffixes }) => {
-				this.suffixes = suffixes.map(suffix => suffix);
+			).then(({ items }) => {
+				this.items = items;
 			});
 		},
 		addItem(type, description) {
-			return this.callBackend(
+			this.callBackend(
 				`
 					mutation ($item: ItemInput) {
 						newItem: saveItem(item: $item) {
 							id
+							type
 							description
 						}
 					}
@@ -144,10 +109,10 @@ export default {
 						description
 					}
 				}
-			);
+			).then(({ newItem }) => this.items.push(newItem));
 		},
 		deleteItem(id) {
-			return this.callBackend(
+			this.callBackend(
 				`
 					mutation ($id: Int) {
 						deleted: deleteItem(id: $id)
@@ -156,7 +121,11 @@ export default {
 				{
 					id
 				}
-			);
+			).then(({ deleted }) => {
+				if (deleted) {
+					this.items = this.items.filter(item => item.id !== id);
+				}
+			});
 		},
 		callBackend(query, variables) {
 			return axios.post("http://localhost:4000", {
@@ -166,6 +135,12 @@ export default {
 		}
 	},
 	computed: {
+		prefixes() {
+			return this.items.filter(item => item.type === "prefix");
+		},
+		suffixes() {
+			return this.items.filter(item => item.type === "suffix");
+		},
 		domains() {
 			const domains = [];
 
@@ -182,8 +157,7 @@ export default {
 		}
 	},
 	created() {
-		this.getPrefixes();
-		this.getSuffixes();
+		this.getItems();
 	}
 };
 </script>
