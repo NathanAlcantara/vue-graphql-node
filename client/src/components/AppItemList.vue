@@ -11,7 +11,7 @@
             <div class="row">
               <div class="col-md">{{ item.description }}</div>
               <div class="col-md text-right">
-                <button class="btn btn-info" @:click="deleteItem(item.id)">
+                <button class="btn btn-info" @click="deleteItem(item.id)">
                   <span class="fa fa-trash"></span>
                 </button>
               </div>
@@ -26,11 +26,11 @@
             class="form-control"
             type="text"
             v-model="description"
-            @:keyup.enter="addItem(description)"
+            @keyup.enter="addItem(description)"
             placeholder="Digite o item"
           />
           <div class="input-group-append">
-            <button class="btn btn-info" @:click="addItem(description)">
+            <button class="btn btn-info" @click="addItem(description)">
               <span class="fa fa-plus"></span>
             </button>
           </div>

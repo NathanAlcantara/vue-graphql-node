@@ -91,7 +91,7 @@ const resolvers = {
                     const extension = ".com.br"
                     const checkout = `https://checkout.hostgator.com.br/?a=add&sld=${url}&tld=${extension}`;
 
-                    const available = await isDomainAvailable(`${url}${tld}`);
+                    const available = await isDomainAvailable(`${url}${extension}`);
 
                     domains.push({ name, checkout, available });
                 }

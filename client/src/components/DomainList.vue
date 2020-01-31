@@ -6,8 +6,8 @@
           <AppItemList
             title="Prefixos"
             v-bind:items="prefixes"
-            @:addItem="addPrefix"
-            @:deleteItem="deleteItem"
+            @addItem="addPrefix"
+            @deleteItem="deleteItem"
           ></AppItemList>
         </div>
 
@@ -15,8 +15,8 @@
           <AppItemList
             title="Sufixos"
             v-bind:items="suffixes"
-            @:addItem="addSuffix"
-            @:deleteItem="deleteItem"
+            @addItem="addSuffix"
+            @deleteItem="deleteItem"
           ></AppItemList>
         </div>
       </div>
@@ -58,12 +58,7 @@
 
 <script>
 import AppItemList from "./AppItemList";
-import axios from "axios/dist/axios";
-
-axios.interceptors.response.use(response => {
-	const { data } = response.data;
-	return data;
-});
+import { mapState, mapActions } from "vuex";
 
 export default {
 	name: "DomainList",
@@ -71,12 +66,10 @@ export default {
 		AppItemList
 	},
 	data: () => {
-		return {
-			items: [],
-			domains: []
-		};
+		return {};
 	},
 	methods: {
+		...mapActions(["getItems", "deleteItem", "generateDomains"]),
 		addPrefix(prefixDescription) {
 			if (prefixDescription) {
 				this.addItem("prefix", prefixDescription);
@@ -87,96 +80,23 @@ export default {
 				this.addItem("suffix", suffixDescription);
 			}
 		},
-		getItems() {
-			this.callBackend(
-				`
-					{
-						items {
-							id
-							type
-							description
-						}
-					}
-				`
-			).then(({ items }) => {
-				this.items = items;
-			});
-		},
 		addItem(type, description) {
-			this.callBackend(
-				`
-					mutation ($item: ItemInput) {
-						newItem: saveItem(item: $item) {
-							id
-							type
-							description
-						}
-					}
-				`,
-				{
-					item: {
-						type,
-						description
-					}
-				}
-			).then(({ newItem }) => {
-				this.items.push(newItem);
-				this.generateDomains();
-			});
-		},
-		deleteItem(id) {
-			this.callBackend(
-				`
-					mutation ($id: Int) {
-						deleted: deleteItem(id: $id)
-					}
-				`,
-				{
-					id
-				}
-			).then(({ deleted }) => {
-				if (deleted) {
-					this.items = this.items.filter(item => item.id !== id);
-					this.generateDomains();
-				}
-			});
-		},
-		generateDomains() {
-			this.callBackend(
-				`
-					mutation {
-						domains: generateDomains {
-							name
-							checkout
-							available
-						}
-					}
-				`
-			).then(({ domains }) => (this.domains = domains));
+			this.$store.dispatch("addItem", { type, description });
 		},
 		openDomain(domain) {
 			this.$router.push({
 				path: `/domains/${domain.name}`
 			});
-		},
-		callBackend(query, variables) {
-			return axios.post("http://localhost:4000", {
-				query,
-				variables
-			});
 		}
 	},
 	computed: {
+		...mapState(["items", "domains"]),
 		prefixes() {
 			return this.items.filter(item => item.type === "prefix");
 		},
 		suffixes() {
 			return this.items.filter(item => item.type === "suffix");
 		}
-	},
-	created() {
-		this.getItems();
-		this.generateDomains();
 	}
 };
 </script>
